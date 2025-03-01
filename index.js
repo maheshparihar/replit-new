@@ -20,23 +20,29 @@ app.post("/run", (req, res) => {
     if (language === "javascript") {
         filename = "temp.js";
         execCommand = `node ${filename}`;
-    } if (language === "react") {
+    } else if (language === "react") {
         filename = "temp.jsx";
         fs.writeFileSync(filename, code);
-    
-        // 🟢 Use Babel to transpile JSX before running it
-        execCommand = `npx babel ${filename} --presets @babel/preset-react,@babel/preset-env --out-file compiled.js && node compiled.js`;
+
+        // **Wrap JSX in a ReactDOMServer render function**
+        const wrapperFile = "wrapper.js";
+        fs.writeFileSync(wrapperFile, `
+            import React from 'react';
+            import { renderToString } from 'react-dom/server';
+            import App from './temp.jsx';
+
+            console.log(renderToString(<App />));
+        `);
+
+        execCommand = `npx babel ${wrapperFile} --presets @babel/preset-react,@babel/preset-env --out-file compiled.js && node compiled.js`;
     } else if (language === "html") {
         filename = "index.html";
         fs.writeFileSync(filename, code);
-
-        // Directly return HTML code for testing instead of executing
         output = code;
     } else {
         return res.status(400).json({ error: "Unsupported language" });
     }
 
-    // If HTML, return without execution
     if (language === "html") {
         return res.json({
             success: true,
@@ -49,16 +55,12 @@ app.post("/run", (req, res) => {
         });
     }
 
-    // Save code to a file
-    fs.writeFileSync(filename, code);
-
     // Execute the code
     exec(execCommand, (error, stdout, stderr) => {
         if (error) {
             return res.json({ success: false, error: stderr });
         }
 
-        // **Ensure testCases is always an array**
         const formattedTestCases = Array.isArray(testCases) ? testCases : [];
 
         const results = formattedTestCases.map((test) => ({
