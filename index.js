@@ -20,10 +20,44 @@ app.post("/run", (req, res) => {
     if (language === "javascript") {
         filename = "temp.js";
         execCommand = `node ${filename}`;
-    } else if (language === "react") {
+    }
+    else if (language === "react") {
         filename = "temp.jsx";
-        execCommand = `node ${filename}`;
-    } else if (language === "html") {
+        testFilename = "temp.test.jsx";
+
+        // Wrap React code inside a Jest test
+        const testCode = `
+            import React from "react";
+            import { render, screen, fireEvent } from "@testing-library/react";
+            import "@testing-library/jest-dom";
+            ${code}
+            
+            test("Component renders", () => {
+                render(<Counter />);
+                expect(screen.getByTestId("counter-value")).toHaveTextContent("Count: 0");
+            });
+
+            test("Click Increment Button", () => {
+                render(<Counter />);
+                const button = screen.getByTestId("increment-btn");
+                fireEvent.click(button);
+                expect(screen.getByTestId("counter-value")).toHaveTextContent("Count: 1");
+            });
+
+            test("Click Decrement Button", () => {
+                render(<Counter />);
+                const button = screen.getByTestId("decrement-btn");
+                fireEvent.click(button);
+                expect(screen.getByTestId("counter-value")).toHaveTextContent("Count: -1");
+            });
+        `;
+
+        fs.writeFileSync(filename, code);
+        fs.writeFileSync(testFilename, testCode);
+
+        execCommand = `npx jest ${testFilename} --json --silent`;
+    }
+  else if (language === "html") {
         filename = "index.html";
         fs.writeFileSync(filename, code);
 
