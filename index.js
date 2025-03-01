@@ -59,8 +59,8 @@ app.post("/run", (req, res) => {
 app.get("/api/hello", (req, res) => {
     res.json({ message: "Hello from Replit API!" });
   });
-  
+
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running hh on http://localhost:${PORT}`);
   });
 
