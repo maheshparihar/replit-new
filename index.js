@@ -27,7 +27,7 @@ app.post("/run", (req, res) => {
         execCommand = `node ${filename}`;
     } else if (language === "html") {
         filename = "index.html";
-        fs.writeFileSync("index.css", testCases.css || "");
+       // fs.writeFileSync("index.css", testCases.css || "");
         execCommand = `echo "HTML and CSS saved, open index.html"`;
     } else {
         return res.status(400).json({ error: "Unsupported language" });
