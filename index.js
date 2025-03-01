@@ -20,9 +20,12 @@ app.post("/run", (req, res) => {
     if (language === "javascript") {
         filename = "temp.js";
         execCommand = `node ${filename}`;
-    } else if (language === "react") {
-        filename = "temp.mjs";
-        execCommand = `node ${filename}`;
+    } if (language === "react") {
+        filename = "temp.jsx";
+        fs.writeFileSync(filename, code);
+    
+        // 🟢 Use Babel to transpile JSX before running it
+        execCommand = `npx babel ${filename} --presets @babel/preset-react,@babel/preset-env --out-file compiled.js && node compiled.js`;
     } else if (language === "html") {
         filename = "index.html";
         fs.writeFileSync(filename, code);
