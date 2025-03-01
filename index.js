@@ -21,7 +21,7 @@ app.post("/run", (req, res) => {
         filename = "temp.js";
         execCommand = `node ${filename}`;
     } else if (language === "react") {
-        filename = "temp.jsx";
+        filename = "temp.mjs";
         execCommand = `node ${filename}`;
     } else if (language === "html") {
         filename = "index.html";
