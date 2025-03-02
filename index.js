@@ -48,6 +48,10 @@ app.get("/api/hello", (req, res) => {
   res.json({ message: "Hello from Replit API!" });
 });
 
+app.get('/', (req, res) => {
+  res.send('Hello, world!');
+});
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
