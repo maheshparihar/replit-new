@@ -10,7 +10,7 @@ app.use(bodyParser.json());
 
 // Endpoint to execute dynamic code and test cases
 app.post('/execute', (req, res) => {
-  const { code, testCases, type } = req.body;  // `type` indicates the type of test (React, Node, HTML, etc.)
+  const { code, testCases, type } = req.body;
 
   // Generate paths for temp files
   const codeFilePath = path.join(__dirname, 'tempCode.js');
@@ -25,7 +25,6 @@ app.post('/execute', (req, res) => {
   switch (type) {
     case 'react':
       testCode = `
-        const React = require('react');
         const { render, screen } = require('@testing-library/react');
         const dynamicCode = require('./tempCode').default; // Import the dynamically generated code
         describe('React Dynamic Test', () => {
@@ -78,13 +77,11 @@ app.post('/execute', (req, res) => {
   exec('npx jest --silent --runInBand', (err, stdout, stderr) => {
     if (err) {
       console.error('Error executing Jest tests:', err);
-      return res.status(500).json({ status: 'error', message: 'Test execution failed.' });
+      console.error('stderr:', stderr);
+      return res.status(500).json({ status: 'error', message: 'Test execution failed.', error: stderr });
     }
 
-    // Clean up temporary files
-    fs.unlinkSync(codeFilePath);
-    fs.unlinkSync(testFilePath);
-
+    console.log('stdout:', stdout);  // Log stdout to check the Jest results
     res.json({ status: 'success', result: stdout });
   });
 });
