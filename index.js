@@ -1,4 +1,3 @@
-// backend/server.js
 const express = require('express');
 const { exec } = require('child_process');
 const bodyParser = require('body-parser');
@@ -9,26 +8,73 @@ const PORT = process.env.PORT || 3002;
 
 app.use(bodyParser.json());
 
-// Endpoint to execute code and Jest test cases
+// Endpoint to execute dynamic code and test cases
 app.post('/execute', (req, res) => {
-  const { code, testCases } = req.body;
+  const { code, testCases, type } = req.body;  // `type` indicates the type of test (React, Node, HTML, etc.)
 
-  // Write code to a temporary file
+  // Generate paths for temp files
   const codeFilePath = path.join(__dirname, 'tempCode.js');
   const testFilePath = path.join(__dirname, 'tempTest.js');
 
-  fs.writeFileSync(codeFilePath, `const dynamicCode = ${code};\n`);
+  // Write code to a temporary file
+  fs.writeFileSync(codeFilePath, code);
 
-  // Create the Jest test file
-  const testCode = `
-    const dynamicCode = require('./tempCode'); // Import the dynamically generated code
-    describe('Dynamic Tests', () => {
-      ${testCases}
-    });
-  `;
+  let testCode = '';
+
+  // Based on the type, we will create different test cases
+  switch (type) {
+    case 'react':
+      testCode = `
+        const React = require('react');
+        const { render, screen } = require('@testing-library/react');
+        const dynamicCode = require('./tempCode').default; // Import the dynamically generated code
+        describe('React Dynamic Test', () => {
+          ${testCases}
+        });
+      `;
+      break;
+
+    case 'node':
+      testCode = `
+        const dynamicCode = require('./tempCode');  // Import the dynamically generated code
+        describe('Node Dynamic Test', () => {
+          ${testCases}
+        });
+      `;
+      break;
+
+    case 'html':
+      // HTML tests typically require jsdom
+      testCode = `
+        const { JSDOM } = require('jsdom');
+        const { document } = (new JSDOM(\`<!DOCTYPE html><html><body>${code}</body></html>\`)).window;
+        const dynamicCode = document.querySelector('body');
+        describe('HTML Dynamic Test', () => {
+          ${testCases}
+        });
+      `;
+      break;
+
+    case 'css':
+      // CSS tests require jsdom too, assuming you might check styles
+      testCode = `
+        const { JSDOM } = require('jsdom');
+        const { document } = (new JSDOM(\`<!DOCTYPE html><html><body><div style="${code}"></div></body></html>\`)).window;
+        const dynamicCode = document.querySelector('div');
+        describe('CSS Dynamic Test', () => {
+          ${testCases}
+        });
+      `;
+      break;
+
+    default:
+      return res.status(400).json({ status: 'error', message: 'Unknown test type' });
+  }
+
+  // Write the generated test case to a temporary file
   fs.writeFileSync(testFilePath, testCode);
 
-  // Execute Jest tests
+  // Run Jest tests
   exec('npx jest --silent --runInBand', (err, stdout, stderr) => {
     if (err) {
       console.error('Error executing Jest tests:', err);
@@ -43,7 +89,6 @@ app.post('/execute', (req, res) => {
   });
 });
 
-
 app.get("/api/hello", (req, res) => {
   res.json({ message: "Hello from Replit API!" });
 });
@@ -53,5 +98,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running ona http://localhost:${PORT}`);
 });
