@@ -46,10 +46,12 @@ app.post("/execute", (req, res) => {
   switch (type) {
     case "react":
       testCode = `
-        const { render, screen } = require('@testing-library/react');
+        const { render, screen, fireEvent,waitFor } = require('@testing-library/react');
+        const React = require('react'); // Import React
         const dynamicCode = require('./tempCode').default; // Import the dynamically generated code
+
         describe('React Dynamic Test', () => {
-          ${testCases}
+          ${testCases} // Dynamically insert the test cases here
         });
       `;
       break;
